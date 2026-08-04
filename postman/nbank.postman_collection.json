@@ -1,0 +1,1158 @@
+{
+  "info": {
+    "_postman_id": "5e20a2cf-706b-44a3-b590-633c0873d4d3",
+    "name": "nbank",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "17214798"
+  },
+  "item": [
+    {
+      "name": "00_preconditions",
+      "item": [
+        {
+          "name": "admin log in",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const token = pm.response.headers.get(\"Authorization\");\r",
+                  "pm.environment.set(\"adminToken\", token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"admin\",\r\n  \"password\": \"admin\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create a new user1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"user1\",\r\n  \"password\": \"verysTRongPassword33$\",\r\n  \"role\": \"USER\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create a new user2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"user2\",\r\n  \"password\": \"verysTRongPassword34$\",\r\n  \"role\": \"USER\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can log in",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const token = pm.response.headers.get(\"Authorization\");\r",
+                  "pm.environment.set(\"user1Token\", token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"user1\",\r\n  \"password\": \"verysTRongPassword33$\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user2 can log in",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const token = pm.response.headers.get(\"Authorization\");\r",
+                  "pm.environment.set(\"user2Token\", token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"user2\",\r\n  \"password\": \"verysTRongPassword34$\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 create account1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const accountId = pm.response.json().id;\r",
+                  "pm.environment.set(\"user1Account1\", accountId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 create account2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const accountId = pm.response.json().id;\r",
+                  "pm.environment.set(\"user1Account2\", accountId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user2 create account1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const accountId = pm.response.json().id;\r",
+                  "pm.environment.set(\"user2Account1\", accountId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user2Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01_deposit",
+      "item": [
+        {
+          "name": "user1 can deposit account1 with 5000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 5000\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can deposit account1 with 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can't deposit account1 with -100",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": -100\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can't deposit account1 with 0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can't deposit account1 with 5001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 5001\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can't deposit to user2's account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user2Account1}},\r\n  \"balance\": 100\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can't deposit to a non-existent account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": 38,\r\n  \"balance\": 100\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can't deposit to account without token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 100\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02_transfer",
+      "item": [
+        {
+          "name": "user1 can transfer between their accounts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 1000\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can transfer to user2's account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user2Account1}},\r\n  \"amount\": 500\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't transfer of a negative amount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": -100\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't zero sum transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 0\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't transfer over max amount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 10001\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't transfer an amount over the balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 7800\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't transfer from a non-existent account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": 24,\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 500\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't transfer to a non-existent account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": 5,\r\n  \"amount\": 500\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't transfer without token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": 5,\r\n  \"amount\": 500\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03_profile",
+      "item": [
+        {
+          "name": "a valid two-word name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Ivan Ivanov\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid one-word name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Ivan\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid name with only spaces",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"   \"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid name with numbers",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Ivan123 Ivanov\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid name with special characters",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Ivan @Ivanov\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid name of more than two words",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Ivan Ivanovich Ivanov\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "invalid name empty value",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't change name without token",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Ivan Ivanov\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customer/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "customer",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
