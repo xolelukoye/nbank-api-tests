@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class ProfileTest extends BaseTest {
@@ -30,6 +31,18 @@ public class ProfileTest extends BaseTest {
                 .put("http://localhost:4111/api/v1/customer/profile")
         .then()
                 .statusCode(HttpStatus.SC_OK);
+
+        String actualName =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/customer/profile")
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("name");
+
+        assertEquals("Ivan Ivanov", actualName);
     }
 
     static Stream<Arguments> invalidNames() {

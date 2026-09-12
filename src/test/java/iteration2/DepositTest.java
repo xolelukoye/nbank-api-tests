@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DepositTest extends BaseTest {
 
@@ -25,6 +26,19 @@ public class DepositTest extends BaseTest {
     @ParameterizedTest(name = "User1 can deposit {0}")
     @MethodSource("validDepositAmounts")
     void user1CanDeposit(double amount) {
+
+        // get balance before deposit
+        double balanceBefore =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        //deposit
         String requestBody = String.format(
                 """
                         {
@@ -32,6 +46,7 @@ public class DepositTest extends BaseTest {
                         "balance": %s
                         }
                         """, user1Account1, amount);
+        double balanceAfter =
         given()
                 .header("Authorization", user1Token)
                 .contentType(ContentType.JSON)
@@ -39,7 +54,12 @@ public class DepositTest extends BaseTest {
         .when()
                 .post("http://localhost:4111/api/v1/accounts/deposit")
         .then()
-                .statusCode(HttpStatus.SC_OK);
+                .statusCode(HttpStatus.SC_OK)
+                .extract()
+                .path("balance");
+
+        // check balance after deposit
+        assertEquals(balanceBefore + amount, balanceAfter);
     }
 
     static Stream<Arguments> invalidDepositAmounts() {
@@ -54,6 +74,19 @@ public class DepositTest extends BaseTest {
     @ParameterizedTest(name = "User1 cannot deposit {0}")
     @MethodSource("invalidDepositAmounts")
     void user1CannotDeposit(double amount) {
+
+        // get balance before deposit
+        double balanceBefore =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        // deposit
         String requestBody = String.format(
                 """
                         {
@@ -69,6 +102,20 @@ public class DepositTest extends BaseTest {
                 .post("http://localhost:4111/api/v1/accounts/deposit")
         .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
+
+        // get balance after failed deposit
+        double balanceAfter =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        // check balance after deposit
+        assertEquals(balanceBefore, balanceAfter);
     }
 
     @Test

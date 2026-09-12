@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TransferTest extends BaseTest {
 
@@ -31,7 +32,7 @@ public class TransferTest extends BaseTest {
                 .then()
                 .statusCode(HttpStatus.SC_OK);
 
-        // переводим со счета на счет
+        // transfer
         String transferRequestBody = String.format(
                 """
                 {
@@ -52,26 +53,24 @@ public class TransferTest extends BaseTest {
 
     static Stream<Arguments> validTransfers() {
         return Stream.of(
-                Arguments.of(user1Account1, user1Account2, 1000),
-                Arguments.of(user1Account1, user1Account2, 9999.99),
-                Arguments.of(user1Account1, user1Account2, 10000),
-                Arguments.of(user1Account1, user1Account2, 0.01),
-                Arguments.of(user1Account1, user2Account1, 500)
-        );
+                Arguments.of(1000),
+                Arguments.of(9999.99),
+                Arguments.of(10000),
+                Arguments.of(0.01));
     }
 
-    @ParameterizedTest(name = "User can transfer {2} from account {0} to account {1}")
+    @ParameterizedTest(name = "User can transfer {0}")
     @MethodSource("validTransfers")
-    void user1CanTransfer(long senderAccountId, long receiverAccountId, double amount) {
+    void user1CanTransfer(double amount) {
 
-        // пополняем счет, чтобы было что переводить
+        // deposit money to sender account
         String topUpRequestBody = String.format(
                 """
                 {
                 "id": %s,
                 "balance": %s
                 }
-                """, senderAccountId, amount);
+                """, user1Account1, amount);
         given()
                 .header("Authorization", user1Token)
                 .contentType(ContentType.JSON)
@@ -81,7 +80,28 @@ public class TransferTest extends BaseTest {
                 .then()
                 .statusCode(HttpStatus.SC_OK);
 
-        // переводим со счета на счет
+        // get balances before transfer
+        double senderBalanceBefore =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        double receiverBalanceBefore =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account2)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        // transfer
         String transferRequestBody = String.format(
                 """
                 {
@@ -89,7 +109,7 @@ public class TransferTest extends BaseTest {
                 "receiverAccountId": %s,
                 "amount": %s
                 }
-                """, senderAccountId, receiverAccountId, amount);
+                """, user1Account1, user1Account2, amount);
         given()
                 .header("Authorization", user1Token)
                 .contentType(ContentType.JSON)
@@ -98,6 +118,123 @@ public class TransferTest extends BaseTest {
                 .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .statusCode(HttpStatus.SC_OK);
+
+        // get balances after transfer
+        double senderBalanceAfter =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        double receiverBalanceAfter =
+                given()
+                .header("Authorization", user1Token)
+                .when()
+                .get("http://localhost:4111/api/v1/accounts/" + user1Account2)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .extract()
+                .path("balance");
+
+        // check balances
+        assertEquals(senderBalanceBefore - amount, senderBalanceAfter);
+        assertEquals(receiverBalanceBefore + amount, receiverBalanceAfter);
+    }
+
+    @Test
+    void user1CanTransferToUser2() {
+
+        double amount = 500;
+
+        // deposit money to sender account
+        String topUpRequestBody = String.format(
+                """
+                {
+                "id": %s,
+                "balance": %s
+                }
+                """, user1Account1, amount);
+        given()
+                .header("Authorization", user1Token)
+                .contentType(ContentType.JSON)
+                .body(topUpRequestBody)
+                .when()
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .statusCode(HttpStatus.SC_OK);
+
+        // get balances before transfer
+        double senderBalanceBefore =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        double receiverBalanceBefore =
+                given()
+                        .header("Authorization", user2Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user2Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        // transfer
+        String transferRequestBody = String.format(
+                """
+                {
+                    "senderAccountId": %s,
+                    "receiverAccountId": %s,
+                    "amount": %s
+                }
+                """,
+                user1Account1,
+                user2Account1,
+                amount
+        );
+
+        given()
+                .header("Authorization", user1Token)
+                .contentType(ContentType.JSON)
+                .body(transferRequestBody)
+                .when()
+                .post("http://localhost:4111/api/v1/accounts/transfer")
+                .then()
+                .statusCode(HttpStatus.SC_OK);
+
+        // get balances after transfer
+        double senderBalanceAfter =
+                given()
+                        .header("Authorization", user1Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user1Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        double receiverBalanceAfter =
+                given()
+                        .header("Authorization", user2Token)
+                        .when()
+                        .get("http://localhost:4111/api/v1/accounts/" + user2Account1)
+                        .then()
+                        .statusCode(HttpStatus.SC_OK)
+                        .extract()
+                        .path("balance");
+
+        // check balances
+        assertEquals(senderBalanceBefore - amount, senderBalanceAfter);
+        assertEquals(receiverBalanceBefore + amount, receiverBalanceAfter);
     }
 
     static Stream<Arguments> invalidTransferAmounts() {
