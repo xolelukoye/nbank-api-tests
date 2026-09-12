@@ -350,6 +350,40 @@
       "name": "01_deposit",
       "item": [
         {
+          "name": "user1 can deposit account1 with 4999.99",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 4999.99\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "user1 can deposit account1 with 5000",
           "request": {
             "method": "POST",
@@ -384,6 +418,40 @@
           "response": []
         },
         {
+          "name": "user1 can't deposit account1 with 5000.01",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 5000.01\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "user1 can deposit account1 with 1",
           "request": {
             "method": "POST",
@@ -397,6 +465,40 @@
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can deposit account1 with 0.01",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"id\": {{user1Account1}},\r\n  \"balance\": 0.01\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -650,6 +752,64 @@
           "response": []
         },
         {
+          "name": "user1 can transfer maximum allowed 9999.99",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 9999.99\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user1 can transfer minimal positive 0.01",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 0.01\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "user1 can transfer to user2's account",
           "request": {
             "method": "POST",
@@ -750,6 +910,35 @@
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 10001\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "user can't transfer over max amount (10000.01)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user1Token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"senderAccountId\": {{user1Account1}},\r\n  \"receiverAccountId\": {{user1Account2}},\r\n  \"amount\": 10000.01\r\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/accounts/transfer",
