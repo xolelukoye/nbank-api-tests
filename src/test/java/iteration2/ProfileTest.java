@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import requests.GetProfileRequester;
 import requests.UpdateProfileRequester;
+import specs.ErrorMessages;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -41,7 +42,7 @@ public class ProfileTest extends BaseTest {
                 .isEqualTo(newName);
 
         softly.assertThat(updateResponse.getMessage())
-                .isEqualTo("Profile updated successfully");
+                .isEqualTo(ErrorMessages.PROFILE_UPDATED.getMessage());
 
         // читаем профиль через get
         CustomerResponse profile = new GetProfileRequester(
