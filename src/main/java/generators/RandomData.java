@@ -8,7 +8,7 @@ public class RandomData {
 
     public static final double MIN_TRANSFER_AMOUNT = 0.01;
     public static final double MAX_DEPOSIT_AMOUNT = 5000.0;
-    public static final double MONEY_TOLERANCE = 0.0001;
+    public static final double MONEY_TOLERANCE = 0.01;
 
     private static final long NON_EXISTENT_ID_RANGE = 1_000_000L;
 

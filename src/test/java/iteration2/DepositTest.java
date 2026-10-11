@@ -78,7 +78,7 @@ public class DepositTest extends BaseTest {
 
     @ParameterizedTest(name = "User cannot deposit {0}")
     @MethodSource("invalidDepositAmounts")
-    void userCannotDeposit(double amount, String expectedError) {
+    void userCannotDeposit(double amount, ErrorMessages expectedError) {
         // данные для нового пользователя
         CreateUserRequest userRequest = createUser();
 
@@ -102,7 +102,7 @@ public class DepositTest extends BaseTest {
 
         new DepositRequester(
                 userSpec,
-                ResponseSpecs.requestReturnsBadRequest(expectedError))
+                ResponseSpecs.requestReturnsBadRequest(expectedError.getMessage()))
                 .post(invalidDeposit);
 
         // смотрим все аккаунты пользователя и находим нужный

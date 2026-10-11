@@ -178,7 +178,7 @@ public class TransferTest extends BaseTest {
 
     @ParameterizedTest(name = "User cannot transfer {0}")
     @MethodSource("invalidTransferAmounts")
-    void userCannotTransfer(double amount, String expectedError) {
+    void userCannotTransfer(double amount, ErrorMessages expectedError) {
         // создание юзера
         CreateUserRequest user = createUser();
         RequestSpecification userSpec = RequestSpecs.authAsUser(
@@ -201,7 +201,7 @@ public class TransferTest extends BaseTest {
 
         // невалидный трансфер
         new TransferRequester(
-                userSpec, ResponseSpecs.requestReturnsBadRequest(expectedError))
+                userSpec, ResponseSpecs.requestReturnsBadRequest(expectedError.getMessage()))
                 .post(TransferRequest.builder()
                         .senderAccountId(senderId)
                         .receiverAccountId(receiverId)
