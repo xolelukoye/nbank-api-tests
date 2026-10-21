@@ -6,17 +6,22 @@ import models.CreateUserRequest;
 import models.CustomerResponse;
 import models.ProfileResponse;
 import models.UpdateProfileRequest;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.GetProfileRequester;
-import requests.UpdateProfileRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
 import specs.ErrorMessages;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
+
+import static requests.steps.AdminSteps.createUser;
+import static requests.steps.UserSteps.getProfile;
+import static requests.steps.UserSteps.updateName;
 
 
 public class ProfileTest extends BaseTest {
@@ -28,32 +33,28 @@ public class ProfileTest extends BaseTest {
         RequestSpecification userSpec = RequestSpecs.authAsUser(
                 user.getUsername(), user.getPassword());
 
-        // меняем имя через put
+        // меняем имя
         String newName = "Ivan Ivanov";
 
-        ProfileResponse updateResponse = new UpdateProfileRequester(
-                userSpec, ResponseSpecs.requestReturnsOK())
-                .put(UpdateProfileRequest.builder().name(newName).build())
-                .extract()
-                .as(ProfileResponse.class);
+        // собираем запрос в переменную для ассерта
+        UpdateProfileRequest updateRequest = UpdateProfileRequest.builder()
+                .name(newName)
+                .build();
 
-        // проверка имени в ответе и сообщения об успехе
-        softly.assertThat(updateResponse.getCustomer().getName())
-                .isEqualTo(newName);
+        ProfileResponse updateResponse = updateName(userSpec, newName);
 
+        // сравниваем отправленный запрос и вложенный объект customer из ответа
+        ModelAssertions.assertThatModels(updateRequest, updateResponse.getCustomer()).match();
+
+        // проверяем сообщение об успехе
         softly.assertThat(updateResponse.getMessage())
                 .isEqualTo(ErrorMessages.PROFILE_UPDATED.getMessage());
 
-        // читаем профиль через get
-        CustomerResponse profile = new GetProfileRequester(
-                userSpec, ResponseSpecs.requestReturnsOK())
-                .get()
-                .extract()
-                .as(CustomerResponse.class);
+        // читаем профиль
+        CustomerResponse profile = getProfile(userSpec);
 
-        // проверяем, что имя изменилось
-        softly.assertThat(profile.getName())
-                .isEqualTo(newName);
+        // сравниваем запрос и профиль
+        ModelAssertions.assertThatModels(updateRequest, profile).match();
     }
 
     static Stream<Arguments> invalidNames() {
@@ -76,33 +77,29 @@ public class ProfileTest extends BaseTest {
                 user.getUsername(), user.getPassword());
 
         // имя до
-        CustomerResponse before = new GetProfileRequester(
-                userSpec, ResponseSpecs.requestReturnsOK())
-                .get()
-                .extract()
-                .as(CustomerResponse.class);
+        CustomerResponse before = getProfile(userSpec);
 
         // попытка заменить имя на невалидное
-        new UpdateProfileRequester(userSpec, ResponseSpecs.requestReturnsBadRequest())
-                .put(UpdateProfileRequest.builder()
-                        .name(name).build());
+        new CrudRequester(userSpec,
+                Endpoint.UPDATE_PROFILE,
+                ResponseSpecs.requestReturnsBadRequest())
+                .update(UpdateProfileRequest.builder()
+                        .name(name)
+                        .build());
 
         // проверка, что имя не изменилось
-        CustomerResponse after = new GetProfileRequester(userSpec,
-                ResponseSpecs.requestReturnsOK())
-                .get()
-                .extract()
-                .as(CustomerResponse.class);
+        CustomerResponse after = getProfile(userSpec);
 
         softly.assertThat(after.getName()).isEqualTo(before.getName());
     }
 
     @Test
     void userCannotChangeNameWithoutToken() {
-        new UpdateProfileRequester(
+        new CrudRequester(
                 RequestSpecs.unauthSpec(),
+                Endpoint.UPDATE_PROFILE,
                 ResponseSpecs.requestReturnsUnauthorized())
-                .put(UpdateProfileRequest.builder()
+                .update(UpdateProfileRequest.builder()
                         .name("Ivan Ivanov")
                         .build());
     }

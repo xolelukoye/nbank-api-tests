@@ -2,24 +2,24 @@ package iteration2;
 
 import base.BaseTest;
 import generators.RandomData;
-import io.restassured.common.mapper.TypeRef;
 import io.restassured.specification.RequestSpecification;
-import models.AccountResponse;
 import models.CreateUserRequest;
 import models.DepositRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.CreateAccountRequester;
-import requests.DepositRequester;
-import requests.GetAllAccountsOfUserRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
 import specs.ErrorMessages;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-import java.util.List;
 import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.within;
+import static requests.steps.AccountSteps.*;
+import static requests.steps.AdminSteps.createUser;
 
 public class DepositTest extends BaseTest {
 
@@ -42,29 +42,16 @@ public class DepositTest extends BaseTest {
         RequestSpecification userSpec = RequestSpecs.authAsUser(
                 userRequest.getUsername(), userRequest.getPassword());
 
-        // создание счета от имени пользователя
-        AccountResponse account = new CreateAccountRequester(
-                userSpec, ResponseSpecs.entityWasCreated())
-                .post()
-                .extract()
-                .as(AccountResponse.class);
+        long accountId = createAccount(userSpec);
 
         // депозит
-        DepositRequest depositRequest = DepositRequest.builder()
-                .id(account.getId())
-                .balance(amount)
-                .build();
+        deposit(userSpec, accountId, amount);
 
-        // получение баланса после депозита
-        double balanceAfter = new DepositRequester(
-                userSpec,
-                ResponseSpecs.requestReturnsOK())
-                .post(depositRequest)
-                .extract()
-                .as(AccountResponse.class)
-                .getBalance();
+        // проверка через шаг
+        double balanceAfter = getBalances(userSpec).get(accountId);
 
-        softly.assertThat(balanceAfter).isEqualTo(account.getBalance() + amount);
+        // ожидаем, что баланс равен сумме депозита
+        softly.assertThat(balanceAfter).isCloseTo(amount, within(RandomData.MONEY_TOLERANCE));
     }
 
     static Stream<Arguments> invalidDepositAmounts() {
@@ -86,40 +73,24 @@ public class DepositTest extends BaseTest {
         RequestSpecification userSpec = RequestSpecs.authAsUser(
                 userRequest.getUsername(), userRequest.getPassword());
 
-        // создание счета от имени пользователя
-        AccountResponse account = new CreateAccountRequester(
-                userSpec,
-                ResponseSpecs.entityWasCreated())
-                .post()
-                .extract()
-                .as(AccountResponse.class);
+        long accountId = createAccount(userSpec);
 
-        // невалидный депозит
-        DepositRequest invalidDeposit = DepositRequest.builder()
-                .id(account.getId())
-                .balance(amount)
-                .build();
+        // запоминаем баланс до операции
+        double balanceBefore = getBalances(userSpec).get(accountId);
 
-        new DepositRequester(
+        new CrudRequester(
                 userSpec,
+                Endpoint.DEPOSIT,
                 ResponseSpecs.requestReturnsBadRequest(expectedError.getMessage()))
-                .post(invalidDeposit);
+                .post(DepositRequest.builder()
+                        .id(accountId)
+                        .balance(amount)
+                        .build());
 
-        // смотрим все аккаунты пользователя и находим нужный
-        List<AccountResponse> accounts = new GetAllAccountsOfUserRequester(
-                userSpec, ResponseSpecs.requestReturnsOK())
-                .get()
-                .extract()
-                .as(new TypeRef<List<AccountResponse>>() {
-                });
+        // проверяем, что баланс не изменился
+        double balanceAfter = getBalances(userSpec).get(accountId);
 
-        double balanceAfter = accounts.stream()
-                .filter(a -> a.getAccountNumber().equals(account.getAccountNumber()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Account not found: " + account.getAccountNumber()))
-                .getBalance();
-
-        softly.assertThat(balanceAfter).isEqualTo(account.getBalance());
+        softly.assertThat(balanceAfter).isCloseTo(balanceBefore, within(RandomData.MONEY_TOLERANCE));
     }
 
     @Test
@@ -135,8 +106,9 @@ public class DepositTest extends BaseTest {
                 .balance(RandomData.getValidDepositAmount())
                 .build();
 
-        new DepositRequester(
+        new CrudRequester(
                 userSpec,
+                Endpoint.DEPOSIT,
                 ResponseSpecs.requestReturnsForbidden(ErrorMessages.UNAUTHORIZED_ACCESS.getMessage()))
                 .post(depositRequest);
     }
@@ -149,8 +121,9 @@ public class DepositTest extends BaseTest {
                 .balance(RandomData.getValidDepositAmount())
                 .build();
 
-        new DepositRequester(
+        new CrudRequester(
                 RequestSpecs.unauthSpec(),
+                Endpoint.DEPOSIT,
                 ResponseSpecs.requestReturnsUnauthorized())
                 .post(depositRequest);
     }

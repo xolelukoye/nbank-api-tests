@@ -1,15 +1,13 @@
 package iteration1;
 
 import base.BaseTest;
-import generators.RandomData;
 import io.restassured.response.ValidatableResponse;
 import models.AccountResponse;
 import models.CreateUserRequest;
-import models.UserRole;
 import org.junit.jupiter.api.Test;
-import requests.AdminCreateUserRequester;
-import requests.CreateAccountRequester;
-import requests.GetAllAccountsOfUserRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import requests.steps.AdminSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -20,21 +18,12 @@ public class CreateAccountTest extends BaseTest {
     @Test
     public void userCanCreateAccountTest() {
         // данные для нового пользователя
-        CreateUserRequest userRequest = CreateUserRequest.builder()
-                .username(RandomData.getUsername())
-                .password(RandomData.getPassword())
-                .role(UserRole.USER.toString())
-                .build();
-
-        // создание пользователя админом
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(userRequest);
+        CreateUserRequest userRequest = AdminSteps.createUser();
 
         // создание счета от имени пользователя
-        ValidatableResponse createResponse = new CreateAccountRequester(
+        ValidatableResponse createResponse = new CrudRequester(
                 RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
+                Endpoint.ACCOUNTS,
                 ResponseSpecs.entityWasCreated())
                 .post(null);
 
@@ -44,8 +33,9 @@ public class CreateAccountTest extends BaseTest {
                 .path("accountNumber");
 
         // запрос на все аккаунты пользователя
-        ValidatableResponse getAllAccountsResponse = new GetAllAccountsOfUserRequester(
+        ValidatableResponse getAllAccountsResponse = new CrudRequester(
                 RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
+                Endpoint.GET_ALL_CUSTOMER_ACCOUNTS,
                 ResponseSpecs.requestReturnsOK())
                 .get();
 

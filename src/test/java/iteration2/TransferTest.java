@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.TransferRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
 import specs.ErrorMessages;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
@@ -18,6 +19,9 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.within;
+import static requests.steps.AccountSteps.*;
+import static requests.steps.AdminSteps.createUser;
+import static requests.steps.TransferSteps.transfer;
 
 public class TransferTest extends BaseTest {
 
@@ -47,7 +51,8 @@ public class TransferTest extends BaseTest {
 
         // переводим на 1 больше баланса
         double transferAmount = depositAmount + 1.0;
-        new TransferRequester(userSpec,
+        new CrudRequester(userSpec,
+                Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsBadRequest(ErrorMessages.INVALID_TRANSFER.getMessage()))
                 .post(TransferRequest.builder()
                         .senderAccountId(senderId)
@@ -103,12 +108,7 @@ public class TransferTest extends BaseTest {
         double receiverBefore = before.get(receiverId);
 
         // трансфер
-        new TransferRequester(userSpec, ResponseSpecs.requestReturnsOK())
-                .post(TransferRequest.builder()
-                        .senderAccountId(senderId)
-                        .receiverAccountId(receiverId)
-                        .amount(amountToTransfer)
-                        .build());
+        transfer(userSpec, senderId, receiverId, amountToTransfer);
 
         // получаем балансы после
         Map<Long, Double> after = getBalances(userSpec);
@@ -151,12 +151,7 @@ public class TransferTest extends BaseTest {
         double receiverBefore = getBalances(user2Spec).get(receiverId);
 
         // трансфер со счета юзера1 на счет юзера2
-        new TransferRequester(user1Spec, ResponseSpecs.requestReturnsOK())
-                .post(TransferRequest.builder()
-                        .senderAccountId(senderId)
-                        .receiverAccountId(receiverId)
-                        .amount(amount)
-                        .build());
+        transfer(user1Spec, senderId, receiverId, amount);
 
         // проверяем балансы после трансфера
         double senderAfter = getBalances(user1Spec).get(senderId);
@@ -200,8 +195,10 @@ public class TransferTest extends BaseTest {
         Map<Long, Double> before = getBalances(userSpec);
 
         // невалидный трансфер
-        new TransferRequester(
-                userSpec, ResponseSpecs.requestReturnsBadRequest(expectedError.getMessage()))
+        new CrudRequester(
+                userSpec,
+                Endpoint.TRANSFER,
+                ResponseSpecs.requestReturnsBadRequest(expectedError.getMessage()))
                 .post(TransferRequest.builder()
                         .senderAccountId(senderId)
                         .receiverAccountId(receiverId)
@@ -233,9 +230,13 @@ public class TransferTest extends BaseTest {
         softly.assertThat(balances)
                 .containsKey(receiverId);
 
+        // запоминаем балансы ДО операции
+        Map<Long, Double> before = getBalances(userSpec);
+
         // трансфер с несуществующего счета
-        new TransferRequester(
+        new CrudRequester(
                 userSpec,
+                Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsForbidden(
                         ErrorMessages.UNAUTHORIZED_ACCESS.getMessage()))
                 .post(TransferRequest.builder()
@@ -243,6 +244,12 @@ public class TransferTest extends BaseTest {
                         .receiverAccountId(receiverId)
                         .amount(RandomData.getValidTransferAmount())
                         .build());
+
+        // получаем балансы ПОСЛЕ и проверяем, что они не изменились
+        Map<Long, Double> after = getBalances(userSpec);
+
+        softly.assertThat(after.get(receiverId))
+                .isCloseTo(before.get(receiverId), within(RandomData.MONEY_TOLERANCE));
     }
 
     @Test
@@ -264,10 +271,14 @@ public class TransferTest extends BaseTest {
         double depositAmount = RandomData.getSmallTransferAmount();
         deposit(userSpec, senderId, depositAmount);
 
+        // запоминаем балансы ДО операции
+        Map<Long, Double> before = getBalances(userSpec);
+
         // трансфер на несуществующий счет
         double transferAmount = depositAmount;
-        new TransferRequester(
+        new CrudRequester(
                 userSpec,
+                Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsBadRequest(
                         ErrorMessages.INVALID_TRANSFER.getMessage()))
                 .post(TransferRequest.builder()
@@ -275,14 +286,21 @@ public class TransferTest extends BaseTest {
                         .receiverAccountId(RandomData.getNonExistentReceiverId())
                         .amount(transferAmount)
                         .build());
+
+        // получаем балансы ПОСЛЕ и проверяем, что они не изменились
+        Map<Long, Double> after = getBalances(userSpec);
+
+        softly.assertThat(after.get(senderId))
+                .isCloseTo(before.get(senderId), within(RandomData.MONEY_TOLERANCE));
     }
 
+    // отсутствие токена проверяется первым - пользователь и аккаунт не нужны
+    // просто делаем перевод
     @Test
     void userCannotTransferWithoutToken() {
-        // отсутствие токена проверяется первым - пользователь и аккаунт не нужны
-        // просто делаем перевод
-        new TransferRequester(
+        new CrudRequester(
                 RequestSpecs.unauthSpec(),
+                Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsUnauthorized())
                 .post(TransferRequest.builder()
                         .senderAccountId(RandomData.getNonExistentSenderId())
@@ -290,5 +308,4 @@ public class TransferTest extends BaseTest {
                         .amount(RandomData.getValidTransferAmount())
                         .build());
     }
-
 }
