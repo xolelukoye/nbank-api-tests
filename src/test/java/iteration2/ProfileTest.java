@@ -1,48 +1,60 @@
 package iteration2;
 
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
+import base.BaseTest;
+import io.restassured.specification.RequestSpecification;
+import models.CreateUserRequest;
+import models.CustomerResponse;
+import models.ProfileResponse;
+import models.UpdateProfileRequest;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import specs.ErrorMessages;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static requests.steps.AdminSteps.createUser;
+import static requests.steps.UserSteps.getProfile;
+import static requests.steps.UserSteps.updateName;
 
 
 public class ProfileTest extends BaseTest {
 
     @Test
     void userCanChangeName() {
-        String requestBody = """
-                {
-                "name": "Ivan Ivanov"
-                }
-                """;
+        // создаем пользователя
+        CreateUserRequest user = createUser();
+        RequestSpecification userSpec = RequestSpecs.authAsUser(
+                user.getUsername(), user.getPassword());
 
-        given()
-                .header("Authorization", user1Token)
-                .contentType(ContentType.JSON)
-                .body(requestBody)
-        .when()
-                .put("http://localhost:4111/api/v1/customer/profile")
-        .then()
-                .statusCode(HttpStatus.SC_OK);
+        // меняем имя
+        String newName = "Ivan Ivanov";
 
-        String actualName =
-                given()
-                        .header("Authorization", user1Token)
-                        .when()
-                        .get("http://localhost:4111/api/v1/customer/profile")
-                        .then()
-                        .statusCode(HttpStatus.SC_OK)
-                        .extract()
-                        .path("name");
+        // собираем запрос в переменную для ассерта
+        UpdateProfileRequest updateRequest = UpdateProfileRequest.builder()
+                .name(newName)
+                .build();
 
-        assertEquals("Ivan Ivanov", actualName);
+        ProfileResponse updateResponse = updateName(userSpec, newName);
+
+        // сравниваем отправленный запрос и вложенный объект customer из ответа
+        ModelAssertions.assertThatModels(updateRequest, updateResponse.getCustomer()).match();
+
+        // проверяем сообщение об успехе
+        softly.assertThat(updateResponse.getMessage())
+                .isEqualTo(ErrorMessages.PROFILE_UPDATED.getMessage());
+
+        // читаем профиль
+        CustomerResponse profile = getProfile(userSpec);
+
+        // сравниваем запрос и профиль
+        ModelAssertions.assertThatModels(updateRequest, profile).match();
     }
 
     static Stream<Arguments> invalidNames() {
@@ -59,37 +71,36 @@ public class ProfileTest extends BaseTest {
     @ParameterizedTest(name = "User cannot change name to \"{0}\"")
     @MethodSource("invalidNames")
     void userCannotChangeName(String name) {
-        String requestBody = String.format(
-                """
-                {
-                "name": "%s"
-                }
-                """, name);
+        // создаем пользователя
+        CreateUserRequest user = createUser();
+        RequestSpecification userSpec = RequestSpecs.authAsUser(
+                user.getUsername(), user.getPassword());
 
-        given()
-                .header("Authorization", user1Token)
-                .contentType(ContentType.JSON)
-                .body(requestBody)
-                .when()
-                .put("http://localhost:4111/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_BAD_REQUEST);
+        // имя до
+        CustomerResponse before = getProfile(userSpec);
+
+        // попытка заменить имя на невалидное
+        new CrudRequester(userSpec,
+                Endpoint.UPDATE_PROFILE,
+                ResponseSpecs.requestReturnsBadRequest())
+                .update(UpdateProfileRequest.builder()
+                        .name(name)
+                        .build());
+
+        // проверка, что имя не изменилось
+        CustomerResponse after = getProfile(userSpec);
+
+        softly.assertThat(after.getName()).isEqualTo(before.getName());
     }
 
     @Test
     void userCannotChangeNameWithoutToken() {
-        String requestBody = """
-                {
-                "name": "Ivan Ivanov"
-                }
-                """;
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(requestBody)
-                .when()
-                .put("http://localhost:4111/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_UNAUTHORIZED);
+        new CrudRequester(
+                RequestSpecs.unauthSpec(),
+                Endpoint.UPDATE_PROFILE,
+                ResponseSpecs.requestReturnsUnauthorized())
+                .update(UpdateProfileRequest.builder()
+                        .name("Ivan Ivanov")
+                        .build());
     }
 }
